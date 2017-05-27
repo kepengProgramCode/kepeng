@@ -1,0 +1,26 @@
+﻿<Window x:Class="PLC_ValueMonitor.ChangeWindowsValue"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="改值" Height="350" Width="500" ResizeMode="NoResize">
+    <Grid Background="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Label Content="PLC地址位:" HorizontalAlignment="Left" FontSize="20" Margin="102,33,0,0" Height="35" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+        <Label Content="PLC当前值:" HorizontalAlignment="Left" FontSize="20" Margin="102,15,0,0" VerticalAlignment="Top" Grid.Row="1" Grid.ColumnSpan="2"/>
+        <TextBox Text="123" Margin="74,33,90,12" Grid.ColumnSpan="2" Name="txtDBAddress" Grid.Column="1" FontSize="20" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+        <TextBox Text="123" Margin="75,16,89,29" Grid.ColumnSpan="2" Name="txtAddressValue" Grid.Column="1" FontSize="20" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Grid.Row="1"/>
+        <Label Content="PLC更改值:" HorizontalAlignment="Left" FontSize="20" Margin="102,76,0,0" VerticalAlignment="Top" Grid.Row="1" Grid.ColumnSpan="2" Grid.RowSpan="2"/>
+        <TextBox Text="0" Margin="75,77,89,48" Grid.ColumnSpan="2" Name="txtChangeValue" Grid.Column="1" FontSize="20" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Grid.Row="1" Grid.RowSpan="2"/>
+        <Button Grid.ColumnSpan="2" Margin="81,54,129,53" Grid.Row="2" Grid.RowSpan="2" Name="btnConsol" Content="取消" FontSize="25" Click="btnConsol_Click" />
+        <Button Margin="129,53,81,54" Grid.Row="2" Grid.RowSpan="2" Grid.Column="1" Grid.ColumnSpan="2" Name="btnOK" Content="确认" FontSize="25" Click="btnOK_Click"/>
+    </Grid>
+</Window>
