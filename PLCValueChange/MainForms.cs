@@ -19,7 +19,7 @@ namespace PLCValueChange
         public PLCDevice device;
         public DeviceService server;
         public PLCAddress[] address;
-        
+
         public MainForms()
         {
             InitializeComponent();
@@ -30,7 +30,7 @@ namespace PLCValueChange
             dataGridViewSourse.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             // 启用跨线程操作
             CheckForIllegalCrossThreadCalls = false;
-            server = DeviceService.Register(80, "192.168.1.118", 9010, "10.2.1.221", 9001);
+            server = DeviceService.Register(80, "192.168.31.11", 9010, "192.168.31.11", 9001);
             device = new PLCDevice("10.2.1.201", DeviceType.Siemens_S7_1200);
         }
 
@@ -38,8 +38,32 @@ namespace PLCValueChange
         
         private void Form1_Load(object sender, EventArgs e)
         {
+            //this.KeyPreview = true;
             LoadInitData();
+            this.dataGridViewSourse.CellValidating += dataGridViewSourse_CellValidating;
         }
+
+        /// <summary>
+        /// 修改值
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void dataGridViewSourse_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
+        {
+            if (e.ColumnIndex == 3)
+            {
+                string plcAddress =  dataGridViewSourse.CurrentRow.Cells[1].Value.ToString();
+                for (int i = 0; i < dataGridViewSourse.Rows.Count; i++)
+                {
+                    if (address[i].AddressName == plcAddress)
+                    {
+                        address[i].Write(e.FormattedValue.ToString());
+                    }
+                }
+            }
+        }
+
+      
 
         /// <summary>
         /// 加载数据
@@ -69,6 +93,17 @@ namespace PLCValueChange
                 model.Discription = xnl0.Item(4).InnerText;
                 plcModeList.Add(model);
             }
+
+            address = new PLCAddress[plcModeList.Count];
+            for (int i = 0; i < plcModeList.Count; i++)
+            {
+                address[i] = device.Add(plcModeList[i].Plc_Address);
+                //plcModeList[i].Plc_Value = address[i].Read().Value;
+                plcModeList[i].Plc_Value = "2";
+
+                address[i].ValueChanged += MainForms_ValueChanged;
+            }
+
             dataGridViewSourse.DataSource = plcModeList;
 
             dataGridViewSourse.ClearSelection();
@@ -89,24 +124,30 @@ namespace PLCValueChange
             dataGridViewSourse.Columns[0].Width = 30;
             dataGridViewSourse.Columns[1].Width = 120;
             dataGridViewSourse.Columns[2].Width = 100;
-            dataGridViewSourse.Columns[3].Width = 240;
-            dataGridViewSourse.Columns[4].Width = 85;
+            dataGridViewSourse.Columns[3].Width = 130;
+            dataGridViewSourse.Columns[4].Width = 445;
 
-            for (int i = 0; i < plcModeList.Count; i++)
-            {
-                address[i] = device.Add(plcModeList[i].Plc_Address);
-                address[i].ValueChanged += MainForms_ValueChanged;
-            }
-            server.ListenDevice(device);
+            
+            //server.ListenDevice(device);
         }
 
+        /// <summary>
+        /// 监听事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void MainForms_ValueChanged(PLCAddress sender, ValueChangedEventArgs e)
         {
-            
+            for (int i = 0; i < dataGridViewSourse.Rows.Count; i++)
+            {
+                if (dataGridViewSourse.Rows[i].Cells[1].Value.ToString() == sender.AddressName)
+                {
+                    dataGridViewSourse.Rows[i].Cells[3].Value = e.Value;
+                }
+            }
         }
 
 
-        
         /// <summary>
         /// 添加
         /// </summary>
@@ -114,7 +155,51 @@ namespace PLCValueChange
         /// <param name="e"></param>
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            
+            if (!string.IsNullOrEmpty(txtAddress.Text) && !string.IsNullOrEmpty(txtDiscription.Text) && !string.IsNullOrEmpty(txtIPAddress.Text) && !string.IsNullOrEmpty(txtNumber.Text))
+            {
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.Load(@"..\..\XMLFile.xml");
+
+                //获得根节点
+                XmlElement rootElement = xmlDoc.DocumentElement;
+                //新添加的子节点
+                XmlElement plc = xmlDoc.CreateElement("PLC");
+                rootElement.AppendChild(plc);
+
+                XmlElement id = xmlDoc.CreateElement("plc_Id");
+                id.InnerText = txtNumber.Text.Trim();
+                plc.AppendChild(id);
+
+                XmlElement ip = xmlDoc.CreateElement("plc_IP");
+                ip.InnerText = txtIPAddress.Text.Trim();
+                plc.AppendChild(ip);
+
+                XmlElement plcAddress = xmlDoc.CreateElement("plc_Address");
+                plcAddress.InnerText = txtAddress.Text;
+                plc.AppendChild(plcAddress);
+
+                XmlElement plcValue = xmlDoc.CreateElement("plc_Value");
+                plcValue.InnerText = string.Empty;
+                plc.AppendChild(plcValue);
+
+                XmlElement plcDiscription = xmlDoc.CreateElement("plc_Discription");
+                plcDiscription.InnerText = txtDiscription.Text;
+                plc.AppendChild(plcDiscription);
+
+                xmlDoc.Save(@"..\..\XMLFile.xml");
+                ////进入到DataGridView中
+                LoadInitData();
+
+                txtAddress.Clear();
+                txtDiscription.Clear();
+                txtIPAddress.Clear();
+                txtNumber.Clear();
+            }
+            else
+            {
+                MessageBox.Show("所填写信息不能为空", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
         }
 
 
@@ -138,6 +223,52 @@ namespace PLCValueChange
             selectXe.ParentNode.RemoveChild(selectXe);
             xmlDoc.Save(@"..\..\XMLFile.xml");
             LoadInitData();
+        }
+
+
+
+        /// <summary>
+        /// 修改属性
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnAlter_Click(object sender, EventArgs e)
+        {
+            dataGridViewSourse.CurrentRow.Cells[0].Value = txtNumber.Text; 
+            dataGridViewSourse.CurrentRow.Cells[1].Value = txtAddress.Text; 
+            dataGridViewSourse.CurrentRow.Cells[2].Value = txtIPAddress.Text;
+            dataGridViewSourse.CurrentRow.Cells[4].Value = txtDiscription.Text ;
+
+            XmlDocument doc = new XmlDocument();
+            doc.Load(@"..\..\XMLFile.xml");
+
+            XmlElement users = doc.DocumentElement;
+            XmlNode xn = users.SelectSingleNode(string.Format("/plcClass/PLC[plc_Id = \"{0}\"]", txtNumber.Text));
+
+            xn["plc_Id"].InnerText = txtNumber.Text;
+            xn["plc_IP"].InnerText = txtIPAddress.Text;
+            xn["plc_Address"].InnerText = txtAddress.Text;
+            xn["plc_Discription"].InnerText = txtDiscription.Text;
+            doc.Save(@"..\..\XMLFile.xml");
+            LoadInitData();
+
+            txtAddress.Clear();
+            txtDiscription.Clear();
+            txtIPAddress.Clear();
+            txtNumber.Clear();
+        }
+
+        /// <summary>
+        /// 选择修改行
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void AlterToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            txtNumber.Text = dataGridViewSourse.CurrentRow.Cells[0].Value.ToString();
+            txtAddress.Text = dataGridViewSourse.CurrentRow.Cells[1].Value.ToString();
+            txtIPAddress.Text = dataGridViewSourse.CurrentRow.Cells[2].Value.ToString();
+            txtDiscription.Text = dataGridViewSourse.CurrentRow.Cells[4].Value.ToString();
         }
     }
 }
