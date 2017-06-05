@@ -1,11 +1,14 @@
 ﻿using Hnt.DeviceListener;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -19,10 +22,34 @@ namespace PLCValueChange
         public PLCDevice device;
         public DeviceService server;
         public PLCAddress[] address;
-
+        /// <summary>
+        /// 定义键值对防止重复ID
+        /// </summary>
+        public static Dictionary<int, string> dic = new Dictionary<int, string>(); 
         public MainForms()
         {
             InitializeComponent();
+            int key = Convert.ToInt16(ConfigurationManager.AppSettings["KEY"]);
+            string localIP = ConfigurationManager.AppSettings["LocationIPAddress"];
+            int localPort = Convert.ToInt16(ConfigurationManager.AppSettings["LocationPort"]);
+            string remotionIP = ConfigurationManager.AppSettings["RomotionIPAddress"];
+            int remotionPort = Convert.ToInt16(ConfigurationManager.AppSettings["RemotionPort"]);
+            string plcIP = ConfigurationManager.AppSettings["PLCIPAddress"];
+
+            Ping ping = new Ping();
+            PingReply[] result = new PingReply[3];
+            result[0] = ping.Send(localIP);
+            result[1] = ping.Send(remotionIP);
+            result[2] = ping.Send(plcIP);
+
+            for (int i = 0; i < result.Length; i++)
+            {
+                if (result[i].Status != IPStatus.Success)
+                {
+                    MessageBox.Show(string.Format("网络位连接，请检查网络，详细消息：本机：{0}，远程：{1}，PLC：{2}", result[0].Status.ToString(), result[1].Status.ToString(), result[2].Status.ToString()), "错误");
+                    Environment.Exit(0);
+                }
+            }
 
             this.dataGridViewSourse.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             //表示不显示初始的默认行
@@ -30,7 +57,7 @@ namespace PLCValueChange
             dataGridViewSourse.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             // 启用跨线程操作
             CheckForIllegalCrossThreadCalls = false;
-            server = DeviceService.Register(80, "192.168.31.11", 9010, "192.168.31.11", 9001);
+            server = DeviceService.Register(key, localIP, localPort, remotionIP, remotionPort);
             device = new PLCDevice("10.2.1.201", DeviceType.Siemens_S7_1200);
         }
 
@@ -40,24 +67,37 @@ namespace PLCValueChange
         {
             //this.KeyPreview = true;
             LoadInitData();
-            this.dataGridViewSourse.CellValidating += dataGridViewSourse_CellValidating;
+            this.dataGridViewSourse.Columns[0].ReadOnly = true;
+            this.dataGridViewSourse.Columns[1].ReadOnly = true;
+            this.dataGridViewSourse.Columns[2].ReadOnly = true;
+            this.dataGridViewSourse.Columns[4].ReadOnly = true;
+
+            this.dataGridViewSourse.AllowUserToResizeColumns = false;
+           
+            this.dataGridViewSourse.CellValueChanged += dataGridViewSourse_CellValidated;
         }
+
 
         /// <summary>
         /// 修改值
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        void dataGridViewSourse_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
+        void dataGridViewSourse_CellValidated(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex == 3)
             {
-                string plcAddress =  dataGridViewSourse.CurrentRow.Cells[1].Value.ToString();
+                string plcAddress = dataGridViewSourse.CurrentRow.Cells[1].Value.ToString();
                 for (int i = 0; i < dataGridViewSourse.Rows.Count; i++)
                 {
                     if (address[i].AddressName == plcAddress)
                     {
-                        address[i].Write(e.FormattedValue.ToString());
+                        CommandResult result = address[i].Write(dataGridViewSourse.CurrentRow.Cells[3].Value.ToString());
+                        if (!result.Succeed)
+                        {
+                            MessageBox.Show("修改值失败！！！");
+                        }
+                        break;
                     }
                 }
             }
@@ -92,6 +132,7 @@ namespace PLCValueChange
                 model.Plc_Value = xnl0.Item(3).InnerText;
                 model.Discription = xnl0.Item(4).InnerText;
                 plcModeList.Add(model);
+                
             }
 
             address = new PLCAddress[plcModeList.Count];
@@ -99,7 +140,7 @@ namespace PLCValueChange
             {
                 address[i] = device.Add(plcModeList[i].Plc_Address);
                 //plcModeList[i].Plc_Value = address[i].Read().Value;
-                plcModeList[i].Plc_Value = "2";
+                //plcModeList[i].Plc_Value = "2";
 
                 address[i].ValueChanged += MainForms_ValueChanged;
             }
@@ -127,8 +168,13 @@ namespace PLCValueChange
             dataGridViewSourse.Columns[3].Width = 130;
             dataGridViewSourse.Columns[4].Width = 445;
 
-            
-            //server.ListenDevice(device);
+           // CommandResult s = server.Restart();
+            CommandResult res = server.ListenDevice(device);
+
+            for (int i = 0; i < plcModeList.Count; i++)
+            {
+                plcModeList[i].Plc_Value = address[i].Read().Value;
+            }
         }
 
         /// <summary>
@@ -138,11 +184,19 @@ namespace PLCValueChange
         /// <param name="e"></param>
         void MainForms_ValueChanged(PLCAddress sender, ValueChangedEventArgs e)
         {
-            for (int i = 0; i < dataGridViewSourse.Rows.Count; i++)
+            if (e.PreviousValue == e.Value)
             {
-                if (dataGridViewSourse.Rows[i].Cells[1].Value.ToString() == sender.AddressName)
+                return;
+            }
+            else
+            {
+                for (int i = 0; i < dataGridViewSourse.Rows.Count; i++)
                 {
-                    dataGridViewSourse.Rows[i].Cells[3].Value = e.Value;
+                    if (dataGridViewSourse.Rows[i].Cells[1].Value.ToString() == sender.AddressName)
+                    {
+                        dataGridViewSourse.Rows[i].Cells[3].Value = e.Value;
+                        break;
+                    }
                 }
             }
         }
@@ -155,8 +209,19 @@ namespace PLCValueChange
         /// <param name="e"></param>
         private void btnAdd_Click(object sender, EventArgs e)
         {
+            
             if (!string.IsNullOrEmpty(txtAddress.Text) && !string.IsNullOrEmpty(txtDiscription.Text) && !string.IsNullOrEmpty(txtIPAddress.Text) && !string.IsNullOrEmpty(txtNumber.Text))
             {
+                for (int i = 0; i < dic.Count; i++)
+                {
+                    if (dic.ContainsKey(Convert.ToInt16(txtNumber.Text)))
+                    {
+                        MessageBox.Show("列表中已经包含相同的ID", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                }
+                dic.Add(Convert.ToInt16(txtNumber.Text), txtAddress.Text);
+
                 XmlDocument xmlDoc = new XmlDocument();
                 xmlDoc.Load(@"..\..\XMLFile.xml");
 
@@ -211,7 +276,7 @@ namespace PLCValueChange
         private void DelToolStripMenuItem_Click(object sender, EventArgs e)
         {
             string id = dataGridViewSourse.SelectedRows[0].Cells[0].Value.ToString();
-
+            dic.Remove(Convert.ToInt16(id));
             XmlDocument xmlDoc = new XmlDocument();
             // 找到XML文件
             xmlDoc.Load(@"..\..\XMLFile.xml");

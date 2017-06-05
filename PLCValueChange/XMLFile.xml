@@ -3,7 +3,7 @@
   <PLC>
     <plc_Id>0</plc_Id>
     <plc_IP>10.2.1.201</plc_IP>
-    <plc_Address>DB228,I0</plc_Address>
+    <plc_Address>DB221,I0</plc_Address>
     <plc_Value>
     </plc_Value>
     <plc_Discription>托盘到达</plc_Discription>
@@ -11,7 +11,7 @@
   <PLC>
     <plc_Id>1</plc_Id>
     <plc_IP>10.2.1.201</plc_IP>
-    <plc_Address>DB228,I2</plc_Address>
+    <plc_Address>DB221,I2</plc_Address>
     <plc_Value>
     </plc_Value>
     <plc_Discription>托盘到达</plc_Discription>
@@ -19,7 +19,15 @@
   <PLC>
     <plc_Id>2</plc_Id>
     <plc_IP>10.2.1.201</plc_IP>
-    <plc_Address>DB228,I4</plc_Address>
+    <plc_Address>DB221,I4</plc_Address>
+    <plc_Value>
+    </plc_Value>
+    <plc_Discription>托盘到达</plc_Discription>
+  </PLC>
+  <PLC>
+    <plc_Id>3</plc_Id>
+    <plc_IP>10.2.1.201</plc_IP>
+    <plc_Address>DB221,I6</plc_Address>
     <plc_Value>
     </plc_Value>
     <plc_Discription>托盘到达</plc_Discription>
@@ -27,7 +35,7 @@
   <PLC>
     <plc_Id>4</plc_Id>
     <plc_IP>10.2.1.201</plc_IP>
-    <plc_Address>DB228,I6</plc_Address>
+    <plc_Address>DB221,I8</plc_Address>
     <plc_Value>
     </plc_Value>
     <plc_Discription>托盘到达</plc_Discription>
@@ -35,7 +43,7 @@
   <PLC>
     <plc_Id>5</plc_Id>
     <plc_IP>10.2.1.201</plc_IP>
-    <plc_Address>DB228,I8</plc_Address>
+    <plc_Address>DB221,I10</plc_Address>
     <plc_Value>
     </plc_Value>
     <plc_Discription>托盘到达</plc_Discription>
@@ -43,7 +51,7 @@
   <PLC>
     <plc_Id>6</plc_Id>
     <plc_IP>10.2.1.201</plc_IP>
-    <plc_Address>DB228,I10</plc_Address>
+    <plc_Address>DB221,I12</plc_Address>
     <plc_Value>
     </plc_Value>
     <plc_Discription>托盘到达</plc_Discription>
@@ -51,7 +59,7 @@
   <PLC>
     <plc_Id>7</plc_Id>
     <plc_IP>10.2.1.201</plc_IP>
-    <plc_Address>DB228,I12</plc_Address>
+    <plc_Address>DB221,I14</plc_Address>
     <plc_Value>
     </plc_Value>
     <plc_Discription>托盘到达</plc_Discription>
@@ -59,7 +67,7 @@
   <PLC>
     <plc_Id>8</plc_Id>
     <plc_IP>10.2.1.201</plc_IP>
-    <plc_Address>DB228,I14</plc_Address>
+    <plc_Address>DB221,I16</plc_Address>
     <plc_Value>
     </plc_Value>
     <plc_Discription>托盘到达</plc_Discription>
@@ -67,7 +75,7 @@
   <PLC>
     <plc_Id>9</plc_Id>
     <plc_IP>10.2.1.201</plc_IP>
-    <plc_Address>DB228,I16</plc_Address>
+    <plc_Address>DB221,I20</plc_Address>
     <plc_Value>
     </plc_Value>
     <plc_Discription>托盘到达</plc_Discription>
@@ -75,9 +83,17 @@
   <PLC>
     <plc_Id>10</plc_Id>
     <plc_IP>10.2.1.201</plc_IP>
-    <plc_Address>DB228,I18</plc_Address>
+    <plc_Address>DB221,I22</plc_Address>
     <plc_Value>
     </plc_Value>
-    <plc_Discription>托盘到达</plc_Discription>
+    <plc_Discription>错误代码</plc_Discription>
+  </PLC>
+  <PLC>
+    <plc_Id>11</plc_Id>
+    <plc_IP>10.2.1.201</plc_IP>
+    <plc_Address>DB221,I22</plc_Address>
+    <plc_Value>
+    </plc_Value>
+    <plc_Discription>错误代码</plc_Discription>
   </PLC>
 </plcClass>
